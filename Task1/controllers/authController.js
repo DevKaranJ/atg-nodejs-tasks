@@ -8,7 +8,7 @@ const register = async (req, res) => {
   
   // Validate input data
   const errors = validateUserData(username, email, password);
-  if (errors.length > 0) return res.status(400).json({ errors });
+  if (errors.length > 0) return res.status(400).json({ message: errors.join(', ') });
 
   try {
     // Hash password
@@ -18,7 +18,15 @@ const register = async (req, res) => {
     const result = await registerUser(username, email, passwordHash);
     res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
   } catch (error) {
-    res.status(500).json({ message: 'Database error' });
+    if (error.code === '23505') {
+      if (error.detail.includes('Key (username)')) {
+        return res.status(400).json({ message: 'Username already exists. Please choose a different username.' });
+      }
+      if (error.detail.includes('Key (email)')) {
+        return res.status(400).json({ message: 'Email already exists. Please choose a different email.' });
+      }
+    }
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -29,7 +37,7 @@ const login = async (req, res) => {
   try {
     const user = await findUserByUsername(username);
     
-    if (!user) return res.status(400).json({ message: 'User not found' });
+    if (!user) return res.status(400).json({ message: 'User not found. Please check your username.' });
     
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(400).json({ message: 'Invalid password' });

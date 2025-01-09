@@ -20,7 +20,7 @@ client.connect()
   })
   .catch(err => {
     console.error('Error connecting to PostgreSQL:', err.stack);
-    process.exit(1);  // Exit the process on connection failure
+    process.exit(1);
   });
 
 module.exports = client;
