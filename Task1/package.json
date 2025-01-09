@@ -1,0 +1,25 @@
+{
+  "name": "task1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "mocha tests/auth.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mysql2": "^3.12.0",
+    "pg": "^8.13.1",
+    "mocha": "^10.0.0",
+    "chai": "^4.3.6"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  }
+}
