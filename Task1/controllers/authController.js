@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
-const { registerUser, findUserByUsername } = require('../models/userModel');
+const { registerUser, findUserByUsername, saveResetToken, findUserByToken, updateUserPassword, findUserByEmail } = require('../models/userModel');
 const { validateUserData } = require('../utils/validate');
+const crypto = require('crypto');
 
 // Register user function
 const register = async (req, res) => {
@@ -16,8 +17,9 @@ const register = async (req, res) => {
     
     // Register user in the DB
     const result = await registerUser(username, email, passwordHash);
-    res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
+    res.status(201).json({ message: 'User registered successfully', userId: result.id });
   } catch (error) {
+    // Handle unique constraint errors
     if (error.code === '23505') {
       if (error.detail.includes('Key (username)')) {
         return res.status(400).json({ message: 'Username already exists. Please choose a different username.' });
@@ -26,7 +28,8 @@ const register = async (req, res) => {
         return res.status(400).json({ message: 'Email already exists. Please choose a different email.' });
       }
     }
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Internal server error during registration' });
   }
 };
 
@@ -44,72 +47,69 @@ const login = async (req, res) => {
 
     res.status(200).json({ message: 'Login successful' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error during login' });
   }
 };
-
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
 
 // Reset password function
 const resetPassword = async (req, res) => {
   const { email } = req.body;
 
-  // Validate email
+  // Validate email format
   if (!email || !/\S+@\S+\.\S+/.test(email)) {
     return res.status(400).json({ message: 'Please provide a valid email address.' });
   }
 
   try {
+    // Find user by email
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: 'User with this email not found.' });
+    }
+
     // Generate a reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
 
-    // Here you would save the reset token to the database associated with the user
-    // For example: await saveResetToken(email, resetToken);
+    // Save the reset token in the database associated with the user
+    await saveResetToken(email, resetToken);
 
-    // Send email with reset link to the user using nodemailer (mailservice needed)
-    // const transporter = nodemailer.createTransport({
-    //   service: 'Gmail',
-    //   auth: {
-    //     user: process.env.EMAIL_USER,
-    //     pass: process.env.EMAIL_PASS,
-    //   },
-    // });
+    // Log the token to console for manual copying and testing)
+    console.log('Reset Token:', resetToken);
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    await transporter.sendMail({
-      to: email,
-      subject: 'Password Reset',
-      text: `You requested a password reset. Click the link to reset your password: ${resetLink}`,
-    });
-
-    res.status(200).json({ message: 'Password reset link sent to your email.' });
+    return res.status(200).json({ message: 'Password reset token generated successfully. Please check the console for the token.' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error during password reset:', error);
+    return res.status(500).json({ message: 'Internal server error while generating reset token.' });
   }
 };
 
+// Update password function
 const updatePassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
   // Validate new password
   if (!newPassword || newPassword.length < 6) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+    return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
   }
 
   try {
+    // Check if the token is valid and find associated user
     const user = await findUserByToken(token);
-    if (!user) return res.status(400).json({ message: 'Invalid or expired token.' });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired token. Please request a new one.' });
+    }
 
     // Hash the new password
     const passwordHash = await bcrypt.hash(newPassword, 10);
 
     // Update the user's password in the database
-    // await updateUserPassword(user.id, passwordHash);
+    await updateUserPassword(user.id, passwordHash);
 
-    res.status(200).json({ message: 'Password updated successfully.' });
+    return res.status(200).json({ message: 'Password updated successfully.' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error during password update:', error);
+    return res.status(500).json({ message: 'Internal server error while updating the password.' });
   }
 };
 

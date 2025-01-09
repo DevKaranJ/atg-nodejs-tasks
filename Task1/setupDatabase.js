@@ -12,20 +12,13 @@ const client = new Client({
   port: DB_PORT,
 });
 
-// Connect to PostgreSQL
-client.connect()
-  .then(() => {
-    console.log('Connected to PostgreSQL successfully');
-  })
-  .catch(err => {
-    console.error('Error connecting to PostgreSQL:', err.stack);
-    process.exit(1);
-  });
-
-// Create the database and tables
 const setupDatabase = async () => {
   try {
-    // Create the database if it doesn't exist
+    // Step 1: Connect to PostgreSQL without specifying a database (to create it if not exists)
+    await client.connect();
+    console.log('Connected to PostgreSQL successfully.');
+
+    // Step 2: Create the database if it doesn't exist
     const createDatabaseQuery = `CREATE DATABASE "${DB_NAME}";`;
 
     try {
@@ -39,7 +32,7 @@ const setupDatabase = async () => {
       }
     }
 
-    // Now connect to the newly created or existing database
+    // Step 3: Reconnect to the newly created or existing database
     const dbClient = new Client({
       host: DB_HOST,
       user: DB_USER,
@@ -50,30 +43,43 @@ const setupDatabase = async () => {
 
     await dbClient.connect();
 
-    // Create the users table if it doesn't exist
+    // Step 4: Create the users table if it doesn't exist
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(50) NOT NULL UNIQUE,
         email VARCHAR(100) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        reset_token VARCHAR(255)  -- Add the reset_token column here
       );
     `;
-    
+
     await dbClient.query(createTableQuery);
     console.log('Users table has been created or already exists.');
 
-    // Close the database connection
+    // Step 5: Ensure the reset_token column exists in the users table
+    const addResetTokenQuery = `
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'reset_token') THEN
+          ALTER TABLE users ADD COLUMN reset_token VARCHAR(255);
+        END IF;
+      END;
+      $$;
+    `;
+
+    await dbClient.query(addResetTokenQuery);
+    console.log('Reset token column ensured in the users table.');
+
+    // Step 6: Close the database connection
     await dbClient.end();
     console.log('Database setup complete!');
   } catch (error) {
     console.error('Error during database setup:', error);
   } finally {
-    client.end();
+    client.end(); // Ensure the initial connection is also closed
   }
 };
 
-// Run the database setup
 setupDatabase();
-
