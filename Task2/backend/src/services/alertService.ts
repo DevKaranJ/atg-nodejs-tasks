@@ -1,9 +1,18 @@
 import { Request, Response } from "express";
 import redisClient from "../config/redis";
 import { getCryptoPricesFromAPI } from "../utils/helpers"; // Function to fetch prices from CoinGecko
+import { EventEmitter } from 'events'; // Import EventEmitter for notifications
 
 // Price change threshold for alerting (you can adjust this value)
-const PRICE_THRESHOLD = 5; // Alert when price changes by 5% or more
+let PRICE_THRESHOLD = 5; // Alert when price changes by 5% or more
+
+// Create an instance of EventEmitter
+const eventEmitter = new EventEmitter();
+
+// Function to set user-defined alert criteria
+export const setAlertCriteria = (threshold: number) => {
+    PRICE_THRESHOLD = threshold;
+};
 
 // Function to get the current crypto prices
 export const getCryptoPrices = async (req: Request, res: Response) => {
@@ -15,11 +24,15 @@ export const getCryptoPrices = async (req: Request, res: Response) => {
     }
 };
 
-// Function to check and trigger alerts based on price change
 export const checkAlerts = async (req: Request, res: Response) => {
+    const { cryptoId, newPrice, userThreshold } = req.body; // Accept user-defined threshold
+
+    // Set user-defined threshold if provided
+    if (userThreshold) {
+        setAlertCriteria(userThreshold);
+    }
+
     try {
-        const { cryptoId, newPrice } = req.body;
-        
         // Get last saved price from Redis cache
         const lastPrice = await redisClient.get(cryptoId);
 
@@ -29,7 +42,7 @@ export const checkAlerts = async (req: Request, res: Response) => {
 
             // If the price change exceeds the threshold, send an alert
             if (Math.abs(priceChange) >= PRICE_THRESHOLD) {
-                await sendAlert(cryptoId, priceChange, newPrice);
+                sendAlert(cryptoId, priceChange, newPrice);
                 await redisClient.set(cryptoId, newPrice.toString()); // Update the last price in Redis
             }
         } else {
@@ -43,9 +56,11 @@ export const checkAlerts = async (req: Request, res: Response) => {
     }
 };
 
-// Function to send an alert (email, notification, etc.)
-export const sendAlert = async (cryptoId: string, priceChange: number, newPrice: number) => {
-    // Implement alert logic (e.g., email or SMS alert)
+// Function to send an alert (notification)
+export const sendAlert = (cryptoId: string, priceChange: number, newPrice: number) => {
+    // Emit an event for the alert
+    eventEmitter.emit('priceAlert', { cryptoId, priceChange, newPrice });
     console.log(`Alert: ${cryptoId} price changed by ${priceChange}% to $${newPrice}`);
-    // You can integrate actual alerting services (like sending emails here)
 };
+
+export { eventEmitter };

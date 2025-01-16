@@ -1,5 +1,6 @@
 import axios from "axios";
 import pool from "../config/db";
+import cron from "node-cron";
 
 const syncPrices = async () => {
     try {
@@ -38,4 +39,12 @@ const syncPrices = async () => {
     }
 };
 
-syncPrices();
+// Schedule the syncPrices function to run every minute
+cron.schedule('* * * * *', () => {
+    console.log('Running price synchronization...');
+    syncPrices();
+});
+
+syncPrices(); // Initial call to sync prices immediately
+
+export default syncPrices;
