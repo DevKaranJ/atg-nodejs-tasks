@@ -1,51 +1,56 @@
 import { Request, Response } from "express";
-import { fetchLatestPrices, getCachedPrices, processPriceChange } from "../services/cryptoService";
+import { fetchLatestPrices, getCachedPrices, checkAlerts } from "../services/cryptoService";
 
-// Controller to get the current prices of cryptocurrencies
+// Store user subscriptions in memory (for simplicity)
+const userSubscriptions: { [key: string]: { threshold: number }[] } = {};
+
+// Endpoint to subscribe to notifications
+export const subscribeToNotifications = (req: Request, res: Response) => {
+    const { cryptoId, threshold } = req.body;
+
+    if (!cryptoId || !threshold) {
+        return res.status(400).json({ message: "Invalid subscription data" });
+    }
+
+    if (!userSubscriptions[cryptoId]) {
+        userSubscriptions[cryptoId] = [];
+    }
+
+    userSubscriptions[cryptoId].push({ threshold });
+    res.status(200).json({ message: "Subscribed to notifications", subscriptions: userSubscriptions[cryptoId] });
+};
+
+// Function to check price change and trigger alert if necessary
+export const checkPriceChange = async (req: Request, res: Response) => {
+    const { cryptoId, newPrice } = req.body;
+
+    if (!cryptoId || newPrice === undefined) {
+        return res.status(400).json({ message: "Invalid input data" });
+    }
+
+    await checkAlerts(cryptoId, newPrice);
+    res.status(200).json({ message: "Price checked and alerts processed." });
+};
+
+// Existing functions...
+
 export const getCryptoPrices = async (req: Request, res: Response) => {
     try {
         const prices = await fetchLatestPrices();
         res.json(prices);
     } catch (error) {
-        console.error("Error fetching crypto prices:", error);
-        res.status(500).json({ message: "Error fetching crypto prices." });
+        res.status(500).send("Error fetching latest prices");
     }
 };
 
-// Controller to get cached cryptocurrency prices from Redis
 export const getCachedCryptoPrices = async (req: Request, res: Response) => {
     try {
         const cachedPrices = await getCachedPrices();
-        if (cachedPrices) {
-            res.json(cachedPrices);
-        } else {
-            res.status(404).json({ message: "No cached data found" });
-        }
+        res.json(cachedPrices);
     } catch (error) {
-        console.error("Error fetching cached crypto prices:", error);
-        res.status(500).json({ message: "Error fetching cached crypto prices." });
+        res.status(500).send("Error fetching cached prices");
     }
 };
 
-// Controller to check price change and trigger alert if necessary
-export const checkPriceChange = async (req: Request, res: Response) => {
-    const { cryptoId, previousPrice, currentPrice, threshold } = req.body;
 
-    // Validate the inputs
-    if (typeof cryptoId !== "string" || cryptoId.trim() === "" || isNaN(previousPrice) || isNaN(currentPrice) || isNaN(threshold)) {
-        return res.status(400).json({ message: "Invalid input values" });
-    }    
-
-    try {
-        const priceChangeDetected = processPriceChange(cryptoId, Number(previousPrice), Number(currentPrice), Number(threshold));
-
-        if (priceChangeDetected) {
-            res.status(200).json({ message: "Price change alert triggered!" });
-        } else {
-            res.status(200).json({ message: "No significant price change detected." });
-        }
-    } catch (error) {
-        console.error("Error processing price change:", error);
-        res.status(500).json({ message: "Error processing price change." });
-    }
-};
+export { userSubscriptions };

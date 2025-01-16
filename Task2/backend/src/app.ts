@@ -1,11 +1,22 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import cryptoRoutes from "./routes/cryptoRoutes";
 import redisClient from "./config/redis";
+import { Server } from "socket.io";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
+
+// Enable CORS for your frontend URL (or allow all origins)
+const corsOptions = {
+    origin: 'http://localhost:3000',
+    methods: 'GET, POST, PUT, DELETE',
+    allowedHeaders: 'Content-Type, Authorization'
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use("/api", cryptoRoutes);
@@ -27,6 +38,27 @@ app.get("/", (req, res) => {
     res.send("Crypto Monitoring Backend is Running!");
 });
 
-app.listen(PORT, () => {
+// Initialize Socket.io
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// Attach Socket.io to the server
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000", // Allow frontend to connect
+        methods: ["GET", "POST"]
+    }
+});
+
+// Handle Socket.io connections
+io.on("connection", (socket) => {
+    console.log("New client connected");
+
+    // Handle disconnection
+    socket.on("disconnect", () => {
+        console.log("Client disconnected");
+    });
+});
+
+export { io };

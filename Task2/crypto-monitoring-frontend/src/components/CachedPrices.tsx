@@ -8,7 +8,7 @@ const CachedPrices: React.FC = () => {
     useEffect(() => {
         const fetchCachedPrices = async () => {
             try {
-                const response = await axios.get('/cached-prices');
+                const response = await axios.get('http://localhost:5000/api/cached-prices');
                 setCachedPrices(response.data);
             } catch (err) {
                 setError('Error fetching cached prices');
@@ -23,9 +23,13 @@ const CachedPrices: React.FC = () => {
             <h2>Cached Cryptocurrency Prices</h2>
             {error && <p>{error}</p>}
             <ul>
-                {cachedPrices.map((price, index) => (
-                    <li key={index}>{price.name}: ${price.value}</li>
-                ))}
+                {Array.isArray(cachedPrices) && cachedPrices.length > 0 ? (
+                    cachedPrices.map((price, index) => (
+                        <li key={index}>{price.name}: ${price.value}</li>
+                    ))
+                ) : (
+                    <li>No cached prices available.</li>
+                )}
             </ul>
         </div>
     );

@@ -10,7 +10,7 @@ const PriceChangeChecker: React.FC = () => {
 
     const handleCheckPriceChange = async () => {
         try {
-            const response = await axios.post('/check-price-change', {
+            const response = await axios.post('http://localhost:5000/api/check-price-change', {
                 cryptoId,
                 previousPrice,
                 currentPrice,

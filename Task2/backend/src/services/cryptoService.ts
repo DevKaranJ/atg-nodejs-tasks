@@ -2,15 +2,24 @@ import { getCryptoPricesFromAPI } from "../utils/helpers";
 import { sendAlert } from "./alertService";
 import redisClient from "../config/redis";
 
+// Store user subscriptions in memory
+const userSubscriptions: { [key: string]: Array<{ threshold: number }> } = {};
+
 // Fetch the latest cryptocurrency prices from the API
 export const fetchLatestPrices = async () => {
     try {
         const prices = await getCryptoPricesFromAPI();
         
+        // Transform the response into an array format
+        const priceArray = Object.keys(prices).map(key => ({
+            name: key,
+            value: prices[key].usd, // Assuming the price is in USD
+        }));
+
         // Cache the prices in Redis with an expiration of 1 hour
-        await redisClient.set("cryptoPrices", JSON.stringify(prices), { EX: 3600 });
+        await redisClient.set("cryptoPrices", JSON.stringify(priceArray), { EX: 3600 });
         
-        return prices;
+        return priceArray;
     } catch (error) {
         console.error("Error fetching latest prices:", error);
         throw new Error("Failed to fetch latest prices.");
@@ -31,21 +40,30 @@ export const getCachedPrices = async () => {
     }
 };
 
-/**
- * Processes the price change and checks if the alert threshold is met.
- * @param cryptoId The cryptocurrency ID (e.g., BTC, ETH)
- * @param previousPrice The previous price
- * @param currentPrice The current price
- * @param threshold The price change threshold to trigger an alert
- */
-export const processPriceChange = (cryptoId: string, previousPrice: number, currentPrice: number, threshold: number) => {
-    const priceChange = ((currentPrice - previousPrice) / previousPrice) * 100;
+// Check alerts and notify users based on their subscriptions
+export const checkAlerts = async (cryptoId: string, newPrice: number) => {
+    const userSubscriptionsForCrypto = userSubscriptions[cryptoId] || [];
 
-    // Check if the price change exceeds the threshold
-    if (Math.abs(priceChange) >= threshold) {
-        // Trigger an alert
-        sendAlert(cryptoId, priceChange, currentPrice);
-        return true;
+    // Get last saved price from Redis cache
+    const lastPrice = await redisClient.get(cryptoId);
+
+    if (lastPrice) {
+        // Calculate percentage change
+        const priceChange = ((newPrice - parseFloat(lastPrice)) / parseFloat(lastPrice)) * 100;
+
+        // Check user subscriptions for alerts
+        userSubscriptionsForCrypto.forEach((subscription: { threshold: number }) => {
+            if (Math.abs(priceChange) >= subscription.threshold) {
+                sendAlert(cryptoId, priceChange, newPrice);
+            }
+        });
+
+        // Update the last price in Redis
+        await redisClient.set(cryptoId, newPrice.toString());
+    } else {
+        // If no price is found in Redis, save the new price
+        await redisClient.set(cryptoId, newPrice.toString());
     }
-    return false;
 };
+
+export { sendAlert, userSubscriptions };

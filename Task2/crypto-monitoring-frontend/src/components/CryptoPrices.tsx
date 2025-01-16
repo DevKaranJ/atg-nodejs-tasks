@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const CryptoPrices: React.FC = () => {
+interface CryptoPricesProps {
+    onSelectCrypto: (cryptoId: string) => void; // Define the prop type
+}
+
+const CryptoPrices: React.FC<CryptoPricesProps> = ({ onSelectCrypto }) => {
     const [prices, setPrices] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchPrices = async () => {
             try {
-                const response = await axios.get('/prices');
-                setPrices(response.data);
+                const response = await axios.get('http://localhost:5000/api/prices');
+                if (Array.isArray(response.data)) {
+                    setPrices(response.data);
+                } else {
+                    setError('Unexpected response structure');
+                }
             } catch (err) {
                 setError('Error fetching prices');
             }
@@ -23,9 +31,15 @@ const CryptoPrices: React.FC = () => {
             <h2>Latest Cryptocurrency Prices</h2>
             {error && <p>{error}</p>}
             <ul>
-                {prices.map((price, index) => (
-                    <li key={index}>{price.name}: ${price.value}</li>
-                ))}
+                {Array.isArray(prices) && prices.length > 0 ? (
+                    prices.map((price, index) => (
+                        <li key={index} onClick={() => onSelectCrypto(price.name)}>
+                            {price.name}: ${price.value}
+                        </li>
+                    ))
+                ) : (
+                    <li>No prices available</li>
+                )}
             </ul>
         </div>
     );
