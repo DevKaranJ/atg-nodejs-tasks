@@ -1,23 +1,21 @@
-import React, { useState } from 'react';
-import Navbar from './components/Navbar.tsx';
-import CryptoPrices from './components/CryptoPrices.tsx';
-import CachedPrices from './components/CachedPrices.tsx';
-import PriceAlertSettings from './components/PriceAlertSettings.tsx';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, useParams } from 'react-router-dom';
+import Homepage from './components/Homepage.tsx';
 import CryptoDetails from './components/CryptoDetails.tsx';
 
-const App: React.FC = () => {
-    const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
-    const [notificationCount] = useState<number>(0); // Placeholder for notification count
+const CryptoDetailsWrapper: React.FC = () => {
+    const { cryptoId } = useParams<{ cryptoId: string }>();
+    return <CryptoDetails cryptoId={cryptoId!} />;
+};
 
+const App: React.FC = () => {
     return (
-        <div>
-            <Navbar notificationCount={notificationCount} />
-            <h1>Crypto Monitoring Dashboard</h1>
-            <CryptoPrices onSelectCrypto={setSelectedCrypto} />
-            <CachedPrices />
-            <PriceAlertSettings />
-            {selectedCrypto && <CryptoDetails cryptoId={selectedCrypto} />}
-        </div>
+        <Router>
+            <Routes>
+                <Route path="/" element={<Homepage />} />
+                <Route path="/prices/:cryptoId" element={<CryptoDetailsWrapper />} />
+            </Routes>
+        </Router>
     );
 };
 

@@ -32,12 +32,23 @@ export const checkPriceChange = async (req: Request, res: Response) => {
     res.status(200).json({ message: "Price checked and alerts processed." });
 };
 
-// Existing functions...
-
+// Updated function to get cryptocurrency prices
 export const getCryptoPrices = async (req: Request, res: Response) => {
+    const { coinId } = req.params; // Get coinId from request parameters
     try {
-        const prices = await fetchLatestPrices();
-        res.json(prices);
+        const prices = await fetchLatestPrices(); // Fetch all prices
+        if (coinId) {
+            // Fetch price for a specific cryptocurrency
+            const specificPrice = prices.find(price => price.name === coinId);
+            if (specificPrice) {
+                return res.json(specificPrice);
+            } else {
+                return res.status(404).json({ message: "Cryptocurrency not found" });
+            }
+        } else {
+            // Fetch all prices
+            return res.json(prices);
+        }
     } catch (error) {
         res.status(500).send("Error fetching latest prices");
     }
@@ -51,6 +62,5 @@ export const getCachedCryptoPrices = async (req: Request, res: Response) => {
         res.status(500).send("Error fetching cached prices");
     }
 };
-
 
 export { userSubscriptions };

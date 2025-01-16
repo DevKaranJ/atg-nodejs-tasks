@@ -6,7 +6,24 @@ import { setAlertCriteria } from "../services/alertService";
 const router = express.Router();
 
 // Route to get the current prices of cryptocurrencies
-router.get("/prices", getCryptoPrices);
+router.get("/prices", async (req: Request, res: Response): Promise<void> => {
+    try {
+        await getCryptoPrices(req, res);
+    } catch (error) {
+        console.error("Error fetching crypto prices:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+// Route to get the current price of a specific cryptocurrency
+router.get("/prices/:coinId", async (req: Request, res: Response): Promise<void> => {
+    try {
+        await getCryptoPrices(req, res);
+    } catch (error) {
+        console.error("Error fetching crypto price:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
 
 // Route to check price change and trigger alert if necessary
 router.post("/check-price-change", async (req: Request, res: Response): Promise<void> => {
