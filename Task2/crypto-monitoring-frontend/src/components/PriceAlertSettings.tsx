@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { subscribeToPriceAlerts } from '../services/NotificationService.ts';
-
 import axios from 'axios';
 
 const PriceAlertSettings: React.FC = () => {
@@ -14,7 +13,6 @@ const PriceAlertSettings: React.FC = () => {
     }, []);
 
     const handleSubscribe = async () => {
-
         try {
             const response = await axios.post('http://localhost:5000/api/subscribe', {
                 cryptoId,

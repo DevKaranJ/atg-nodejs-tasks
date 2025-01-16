@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import './Homepage.css'; // Import CSS for styling
+import CachedPrices from './CachedPrices.tsx'; //t CachedPrices component
 
 const Homepage: React.FC = () => {
     const [cryptoPrices, setCryptoPrices] = useState<any[]>([]);
@@ -47,6 +48,9 @@ const Homepage: React.FC = () => {
                         <p>${crypto.value}</p>
                     </Link>
                 ))}
+            </section>
+            <section>
+                <CachedPrices /> {/* Add CachedPrices component here */}
             </section>
         </div>
     );

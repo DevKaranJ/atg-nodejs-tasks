@@ -5,6 +5,15 @@ import redisClient from "../config/redis";
 // Store user subscriptions in memory
 const userSubscriptions: { [key: string]: Array<{ threshold: number }> } = {};
 
+// Function to subscribe a user to price alerts
+export const subscribeToPriceAlerts = (cryptoId: string, threshold: number) => {
+    if (!userSubscriptions[cryptoId]) {
+        userSubscriptions[cryptoId] = [];
+    }
+    userSubscriptions[cryptoId].push({ threshold }); // Store the user's subscription
+    console.log(`User subscribed to alerts for ${cryptoId} with a threshold of ${threshold}%`);
+};
+
 // Fetch the latest cryptocurrency prices from the API
 export const fetchLatestPrices = async () => {
     try {

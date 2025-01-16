@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { fetchLatestPrices, getCachedPrices, checkAlerts } from "../services/cryptoService";
+import { fetchLatestPrices, getCachedPrices, checkAlerts, subscribeToPriceAlerts } from "../services/cryptoService";
 
 // Store user subscriptions in memory (for simplicity)
 const userSubscriptions: { [key: string]: { threshold: number }[] } = {};
@@ -12,12 +12,8 @@ export const subscribeToNotifications = (req: Request, res: Response) => {
         return res.status(400).json({ message: "Invalid subscription data" });
     }
 
-    if (!userSubscriptions[cryptoId]) {
-        userSubscriptions[cryptoId] = [];
-    }
-
-    userSubscriptions[cryptoId].push({ threshold });
-    res.status(200).json({ message: "Subscribed to notifications", subscriptions: userSubscriptions[cryptoId] });
+    subscribeToPriceAlerts(cryptoId, threshold); // Call the new function to handle subscriptions
+    res.status(200).json({ message: "Subscribed to notifications" });
 };
 
 // Function to check price change and trigger alert if necessary
