@@ -1,6 +1,7 @@
 import axios from "axios";
 import pool from "../config/db";
 
+// Seed the cryptocurrencies table with the top 100 cryptocurrencies
 const seedCryptocurrencies = async () => {
     const url = "https://api.coingecko.com/api/v3/coins/markets";
     try {
@@ -13,6 +14,7 @@ const seedCryptocurrencies = async () => {
             },
         });
 
+        // Insert each cryptocurrency into the cryptocurrencies table
         for (const coin of response.data) {
             await pool.query(
                 `INSERT INTO cryptocurrencies (api_id, name, symbol, image_url)

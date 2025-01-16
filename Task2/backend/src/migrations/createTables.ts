@@ -1,6 +1,7 @@
 import pool from "../config/db";
 
 const createTables = async () => {
+    // Create tables for cryptocurrencies, prices, alerts, and trending_coins
     const queries = `
         CREATE TABLE IF NOT EXISTS cryptocurrencies (
             id SERIAL PRIMARY KEY,

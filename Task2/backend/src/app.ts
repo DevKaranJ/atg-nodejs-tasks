@@ -1,14 +1,16 @@
 import express from "express";
 import dotenv from "dotenv";
-import redisClient from "./config/redis";  // Import the Redis client
+import cryptoRoutes from "./routes/cryptoRoutes";
+import redisClient from "./config/redis";
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use("/api", cryptoRoutes);
 
-// Test Redis Connection (you can put this code here for testing)
+// Test Redis Connection
 app.get("/test-redis", async (req, res) => {
     try {
         // Check if Redis is connected by setting and getting a value
