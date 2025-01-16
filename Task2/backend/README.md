@@ -57,5 +57,9 @@ To start the application, use:
 npm run dev
 ```
 
-## License
-This project is licensed under the MIT License.
+## Features
+- Real-time cryptocurrency price monitoring.
+- Alerting system for price changes.
+- Caching mechanism using Redis for efficient data retrieval.
+- API endpoints for fetching current prices, checking price changes, and setting user-defined alert criteria.
+

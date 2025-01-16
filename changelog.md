@@ -17,8 +17,6 @@ All notable changes to this project will be documented in this file.
 
 ### Notes
 - Password update functionality works with two different flows: JWT-based for logged-in users and reset token-based for users who forget their password.
-- Ensure that the correct token (JWT or reset token) is provided depending on the user’s status.
-
 
 ## [2.0.0] - 2025-01-16
 ### Added
@@ -29,9 +27,3 @@ All notable changes to this project will be documented in this file.
 - Added API endpoint to set user-defined alert criteria (`/set-alert-criteria`).
 - Implemented caching mechanism using Redis for efficient price retrieval.
 - Added notification alerts that can be emitted for real-time updates in the web browser.
-
-### Changed
-- Enhanced the `syncPrices` function to run at regular intervals using `node-cron`.
-
-### Fixed
-- Resolved TypeScript errors related to route handlers and event emissions.

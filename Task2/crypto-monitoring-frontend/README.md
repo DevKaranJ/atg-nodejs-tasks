@@ -44,3 +44,9 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+## Features
+- Real-time display of cryptocurrency prices.
+- User interface for setting alert criteria based on price changes.
+- Integration with the backend API for fetching current prices and triggering alerts.
+- Caching mechanism for efficient data retrieval.
