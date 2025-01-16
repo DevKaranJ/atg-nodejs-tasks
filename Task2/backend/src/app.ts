@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for your frontend URL (or allow all origins)
+// CORS Configuration
 const corsOptions = {
     origin: 'http://localhost:3000',
     methods: 'GET, POST, PUT, DELETE',

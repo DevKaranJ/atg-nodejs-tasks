@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import './Homepage.css'; // Import CSS for styling
-import CachedPrices from './CachedPrices.tsx'; //t CachedPrices component
+import './Homepage.css';
+import CachedPrices from './CachedPrices.tsx'; //t CachedPrices
 
 const Homepage: React.FC = () => {
     const [cryptoPrices, setCryptoPrices] = useState<any[]>([]);

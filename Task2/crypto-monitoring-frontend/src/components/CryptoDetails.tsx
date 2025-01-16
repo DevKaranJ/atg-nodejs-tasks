@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './CryptoDetails.css'; // Import CSS for styling
+import PriceAlertSettings from './PriceAlertSettings.tsx';
 
 const CryptoDetails: React.FC<{ cryptoId: string }> = ({ cryptoId }) => {
     const [cryptoData, setCryptoData] = useState<any>(null);
@@ -30,6 +31,7 @@ const CryptoDetails: React.FC<{ cryptoId: string }> = ({ cryptoId }) => {
             <h2>{cryptoData.name}</h2>
             <p>Current Price: ${cryptoData.value}</p>
             {/* Add more details as needed */}
+            <PriceAlertSettings /> {/* Add PriceAlertSettings component here */}
         </div>
     );
 };

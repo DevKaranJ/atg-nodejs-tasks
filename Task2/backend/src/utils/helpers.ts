@@ -5,7 +5,7 @@ export const getCryptoPricesFromAPI = async () => {
     try {
         const response = await axios.get("https://api.coingecko.com/api/v3/simple/price", {
             params: {
-                ids: "bitcoin,ethereum,ripple,litecoin,cardano,polkadot,chainlink,stellar,uniswap,bitcoin-cash", // Added more coin IDs
+                ids: "bitcoin,ethereum,ripple,litecoin,cardano,polkadot,chainlink,stellar,uniswap,bitcoin-cash",
                 vs_currencies: "usd",
                 include_market_cap: "true",
                 include_24hr_vol: "true", 
